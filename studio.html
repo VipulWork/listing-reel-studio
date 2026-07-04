@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listing Reel Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0d0c0b;
+    --panel: #16140f;
+    --panel-2: #1e1b15;
+    --ivory: #f3ede2;
+    --ivory-dim: #b9b2a4;
+    --brass: #c9a24b;
+    --brass-dim: #8a723a;
+    --line: #2c2820;
+    --danger: #b5573f;
+    --radius: 2px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ivory);font-family:'Manrope',sans-serif;}
+  ::selection{background:var(--brass);color:#0d0c0b;}
+
+  header{
+    padding:28px clamp(20px,4vw,56px) 20px;
+    border-bottom:1px solid var(--line);
+    display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  header .eyebrow{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--brass); margin-bottom:6px;}
+  header h1{font-family:'Fraunces',serif; font-weight:500; font-size:clamp(24px,3vw,34px); margin:0; letter-spacing:.01em;}
+  header p{color:var(--ivory-dim); margin:6px 0 0; font-size:13.5px; max-width:520px;}
+
+  .layout{
+    display:grid; grid-template-columns: 340px 1fr; gap:0; min-height:calc(100vh - 110px);
+  }
+  @media (max-width: 900px){ .layout{grid-template-columns:1fr;} }
+
+  .rail{
+    border-right:1px solid var(--line); padding:24px; display:flex; flex-direction:column; gap:26px;
+  }
+  @media (max-width: 900px){ .rail{border-right:none; border-bottom:1px solid var(--line);} }
+
+  .section-label{
+    font-family:'Fraunces',serif; font-size:13px; letter-spacing:.06em; color:var(--brass);
+    display:flex; align-items:center; gap:8px; margin-bottom:12px;
+  }
+  .section-label::after{content:''; flex:1; height:1px; background:var(--line);}
+
+  .dropzone{
+    border:1px dashed var(--line); border-radius:var(--radius); padding:22px 14px; text-align:center;
+    cursor:pointer; transition:.15s border-color, .15s background;
+  }
+  .dropzone:hover, .dropzone.drag{border-color:var(--brass); background:rgba(201,162,75,.06);}
+  .dropzone p{margin:0; font-size:13px; color:var(--ivory-dim);}
+  .dropzone strong{color:var(--ivory); font-weight:600;}
+  input[type=file]{display:none;}
+
+  .music-row{display:flex; gap:8px; align-items:center;}
+  .btn{
+    font-family:'Manrope',sans-serif; font-weight:600; font-size:12.5px; letter-spacing:.03em;
+    background:var(--panel-2); color:var(--ivory); border:1px solid var(--line); border-radius:var(--radius);
+    padding:10px 14px; cursor:pointer; transition:.15s all;
+  }
+  .btn:hover{border-color:var(--brass); color:var(--brass);}
+  .btn.primary{background:var(--brass); color:#0d0c0b; border-color:var(--brass);}
+  .btn.primary:hover{background:#dab868; color:#0d0c0b;}
+  .btn.primary:disabled{opacity:.4; cursor:not-allowed;}
+  .btn.small{padding:6px 10px; font-size:11px;}
+  .btn.block{width:100%;}
+  .btn.danger:hover{border-color:var(--danger); color:var(--danger);}
+
+  .file-tag{font-size:12px; color:var(--ivory-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+  label.field-label{display:block; font-size:11px; color:var(--ivory-dim); margin-bottom:6px; letter-spacing:.02em;}
+  select, input[type=range]{width:100%;}
+  select{
+    background:var(--panel-2); color:var(--ivory); border:1px solid var(--line); border-radius:var(--radius);
+    padding:8px 10px; font-family:'Manrope'; font-size:12.5px;
+  }
+  input[type=range]{accent-color:var(--brass);}
+  .field{margin-bottom:14px;}
+  .row{display:flex; gap:10px;}
+  .row > *{flex:1;}
+  .hint{font-size:11px; color:var(--ivory-dim); margin-top:4px;}
+
+  /* Stage */
+  .stage-wrap{padding:24px clamp(20px,4vw,40px); display:flex; flex-direction:column; gap:18px;}
+  .monitor{
+    background:#000; border:1px solid var(--line); border-radius:var(--radius);
+    aspect-ratio:9/16; max-height:70vh; margin:0 auto; position:relative; width:min(100%, 400px);
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+  }
+  .monitor canvas, .monitor video{width:100%; height:100%; object-fit:contain; display:block;}
+  .monitor .empty-state{color:var(--ivory-dim); font-size:12.5px; text-align:center; padding:20px; font-family:'Fraunces',serif; font-style:italic;}
+  .monitor .corner{position:absolute; width:14px; height:14px; border-color:var(--brass); opacity:.6;}
+  .c-tl{top:8px; left:8px; border-top:1px solid; border-left:1px solid;}
+  .c-tr{top:8px; right:8px; border-top:1px solid; border-right:1px solid;}
+  .c-bl{bottom:8px; left:8px; border-bottom:1px solid; border-left:1px solid;}
+  .c-br{bottom:8px; right:8px; border-bottom:1px solid; border-right:1px solid;}
+
+  .transport{display:flex; gap:10px; justify-content:center; align-items:center;}
+  .rec-dot{width:8px; height:8px; border-radius:50%; background:var(--danger); display:none;}
+  .rec-dot.on{display:inline-block; animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .status{font-size:12px; color:var(--ivory-dim);}
+
+  /* Filmstrip */
+  .filmstrip-label{font-family:'Fraunces',serif; font-size:12px; color:var(--brass); letter-spacing:.05em; margin-bottom:8px;}
+  .filmstrip{
+    display:flex; gap:2px; overflow-x:auto; padding:10px 10px 14px; background:var(--panel);
+    border:1px solid var(--line); border-radius:var(--radius);
+  }
+  .frame{
+    position:relative; flex:0 0 auto; width:96px; border:1px solid var(--line); background:#000;
+    cursor:grab; border-radius:2px; overflow:hidden;
+  }
+  .frame.dragging{opacity:.4;}
+  .frame img{width:100%; height:72px; object-fit:cover; display:block;}
+  .frame .idx{
+    position:absolute; top:3px; left:3px; background:rgba(0,0,0,.65); color:var(--brass);
+    font-size:10px; padding:1px 5px; font-family:'Fraunces',serif;
+  }
+  .frame .rm{
+    position:absolute; top:3px; right:3px; background:rgba(0,0,0,.65); color:var(--ivory);
+    border:none; font-size:11px; width:16px; height:16px; cursor:pointer; line-height:1;
+  }
+  .frame .rm:hover{color:var(--danger);}
+  .frame select{
+    width:100%; font-size:9.5px; padding:3px 2px; border:none; border-top:1px solid var(--line);
+    border-radius:0; background:var(--panel-2);
+  }
+  .sprockets{display:flex; justify-content:space-between; padding:0 2px;}
+  .sprockets span{width:4px; height:4px; background:var(--line); border-radius:50%; display:inline-block;}
+
+  a.dl-link{display:none; text-decoration:none;}
+  a.dl-link.show{display:inline-block;}
+
+  ::-webkit-scrollbar{height:6px; width:6px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="eyebrow">Listing Reel Studio</div>
+    <h1>Photos in. Reel out.</h1>
+    <p>Drop your listing photos, pick a camera move for each frame, add a track, and render a vertical reel — right here, no upload to a server.</p>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="rail">
+
+    <div>
+      <div class="section-label">Photos</div>
+      <div class="dropzone" id="dropzone">
+        <p><strong>Click to add photos</strong><br>or drag them in — JPG / PNG, any order</p>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" multiple>
+    </div>
+
+    <div>
+      <div class="section-label">Soundtrack</div>
+      <div class="dropzone" id="musicZone" style="padding:14px;">
+        <p><strong>Add a music track</strong><br><span class="file-tag" id="musicName">no file selected</span></p>
+      </div>
+      <input type="file" id="musicInput" accept="audio/*">
+      <div class="field" style="margin-top:12px;">
+        <label class="field-label">Music volume</label>
+        <input type="range" id="volSlider" min="0" max="100" value="70">
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Timing</div>
+      <div class="field">
+        <label class="field-label">Seconds per photo: <span id="durVal">3.0</span>s</label>
+        <input type="range" id="durSlider" min="15" max="60" value="30">
+      </div>
+      <div class="field">
+        <label class="field-label">Transition length: <span id="transVal">0.6</span>s</label>
+        <input type="range" id="transSlider" min="2" max="15" value="6">
+      </div>
+      <div class="field">
+        <label class="field-label">Default camera move for new photos</label>
+        <select id="defaultEffect">
+          <option value="auto">Auto (varied)</option>
+          <option value="zoomin">Slow zoom in</option>
+          <option value="zoomout">Slow zoom out</option>
+          <option value="panl">Pan left → right</option>
+          <option value="panr">Pan right → left</option>
+          <option value="static">Static hold</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px;">
+      <button class="btn primary block" id="renderBtn" disabled>Render video</button>
+      <button class="btn block" id="previewBtn" disabled>Preview in browser</button>
+      <a class="dl-link" id="downloadLink"><button class="btn block" style="width:100%;">⬇ Download rendered video</button></a>
+      <div class="status" id="statusText">Add at least 2 photos to begin.</div>
+    </div>
+
+  </div>
+
+  <div class="stage-wrap">
+    <div class="monitor" id="monitor">
+      <div class="empty-state">— Stage is empty —<br>add photos to see them here</div>
+      <div class="corner c-tl"></div><div class="corner c-tr"></div>
+      <div class="corner c-bl"></div><div class="corner c-br"></div>
+    </div>
+    <div class="transport">
+      <span class="rec-dot" id="recDot"></span>
+      <span class="status" id="transportStatus"></span>
+    </div>
+
+    <div>
+      <div class="filmstrip-label">Sequence — drag thumbnails to reorder</div>
+      <div class="filmstrip" id="filmstrip"></div>
+      <div class="sprockets">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CANVAS_W = 720, CANVAS_H = 1280;
+let photos = []; // {img, url, effect, id}
+let musicFile = null, musicUrl = null;
+let idCounter = 0;
+let dragSrcIndex = null;
+
+const dropzone = document.getElementById('dropzone');
+const photoInput = document.getElementById('photoInput');
+const musicZone = document.getElementById('musicZone');
+const musicInput = document.getElementById('musicInput');
+const musicName = document.getElementById('musicName');
+const filmstrip = document.getElementById('filmstrip');
+const monitor = document.getElementById('monitor');
+const durSlider = document.getElementById('durSlider');
+const durVal = document.getElementById('durVal');
+const transSlider = document.getElementById('transSlider');
+const transVal = document.getElementById('transVal');
+const volSlider = document.getElementById('volSlider');
+const defaultEffect = document.getElementById('defaultEffect');
+const renderBtn = document.getElementById('renderBtn');
+const previewBtn = document.getElementById('previewBtn');
+const downloadLink = document.getElementById('downloadLink');
+const statusText = document.getElementById('statusText');
+const transportStatus = document.getElementById('transportStatus');
+const recDot = document.getElementById('recDot');
+
+const EFFECTS = ['zoomin','zoomout','panl','panr','static'];
+
+dropzone.addEventListener('click', () => photoInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+});
+photoInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(fileList){
+  [...fileList].forEach(file => {
+    if(!file.type.startsWith('image/')) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      photos.push({img, url, effect: defaultEffect.value, id: idCounter++});
+      renderFilmstrip();
+      updateButtons();
+      drawIdleFrame();
+    };
+    img.src = url;
+  });
+}
+
+musicZone.addEventListener('click', () => musicInput.click());
+musicInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  musicFile = file;
+  musicUrl = URL.createObjectURL(file);
+  musicName.textContent = file.name;
+});
+
+durSlider.addEventListener('input', () => durVal.textContent = (durSlider.value/10).toFixed(1));
+transSlider.addEventListener('input', () => transVal.textContent = (transSlider.value/10).toFixed(1));
+
+function renderFilmstrip(){
+  filmstrip.innerHTML = '';
+  photos.forEach((p, i) => {
+    const frame = document.createElement('div');
+    frame.className = 'frame';
+    frame.draggable = true;
+    frame.dataset.index = i;
+
+    frame.addEventListener('dragstart', () => { dragSrcIndex = i; frame.classList.add('dragging'); });
+    frame.addEventListener('dragend', () => frame.classList.remove('dragging'));
+    frame.addEventListener('dragover', e => e.preventDefault());
+    frame.addEventListener('drop', e => {
+      e.preventDefault();
+      const target = i;
+      if(dragSrcIndex === null || dragSrcIndex === target) return;
+      const [moved] = photos.splice(dragSrcIndex, 1);
+      photos.splice(target, 0, moved);
+      renderFilmstrip();
+      drawIdleFrame();
+    });
+
+    const img = document.createElement('img');
+    img.src = p.url;
+    const idx = document.createElement('div');
+    idx.className = 'idx';
+    idx.textContent = String(i+1).padStart(2,'0');
+    const rm = document.createElement('button');
+    rm.className = 'rm';
+    rm.textContent = '✕';
+    rm.onclick = (ev) => { ev.stopPropagation(); photos.splice(i,1); renderFilmstrip(); updateButtons(); drawIdleFrame(); };
+
+    const sel = document.createElement('select');
+    [['auto','Auto'],['zoomin','Zoom in'],['zoomout','Zoom out'],['panl','Pan L→R'],['panr','Pan R→L'],['static','Static']].forEach(([v,label]) => {
+      const opt = document.createElement('option');
+      opt.value = v; opt.textContent = label;
+      if(p.effect === v) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => p.effect = sel.value;
+
+    frame.appendChild(img);
+    frame.appendChild(idx);
+    frame.appendChild(rm);
+    frame.appendChild(sel);
+    filmstrip.appendChild(frame);
+  });
+}
+
+function updateButtons(){
+  const ready = photos.length >= 2;
+  renderBtn.disabled = !ready;
+  previewBtn.disabled = !ready;
+  statusText.textContent = ready ? `${photos.length} photos ready · ${(photos.length * durSlider.value/10).toFixed(1)}s total` : 'Add at least 2 photos to begin.';
+}
+
+function resolveEffect(effect, seedIndex){
+  if(effect !== 'auto') return effect;
+  return EFFECTS[seedIndex % EFFECTS.length];
+}
+
+function drawCover(ctx, img, cx, cy, cw, ch, cropProgress, effect){
+  // compute cover-fit source rect, then apply ken-burns crop/zoom based on effect + progress(0..1)
+  const irat = img.width / img.height, crat = cw/ch;
+  let sw, sh, sx, sy;
+  if(irat > crat){ sh = img.height; sw = sh*crat; } else { sw = img.width; sh = sw/crat; }
+  sx = (img.width - sw)/2; sy = (img.height - sh)/2;
+
+  let zoom = 1;
+  let panX = 0, panY = 0;
+  const maxZoom = 0.18, maxPan = 0.12;
+  if(effect === 'zoomin') zoom = 1 + maxZoom*cropProgress;
+  else if(effect === 'zoomout') zoom = 1 + maxZoom*(1-cropProgress);
+  else if(effect === 'panl'){ zoom = 1+maxZoom*0.5; panX = -maxPan + maxPan*2*cropProgress; }
+  else if(effect === 'panr'){ zoom = 1+maxZoom*0.5; panX = maxPan - maxPan*2*cropProgress; }
+  else { zoom = 1.03; }
+
+  const zsw = sw/zoom, zsh = sh/zoom;
+  let zsx = sx + (sw-zsw)/2 + panX*sw;
+  let zsy = sy + (sh-zsh)/2 + panY*sh;
+  zsx = Math.max(0, Math.min(img.width-zsw, zsx));
+  zsy = Math.max(0, Math.min(img.height-zsh, zsy));
+
+  ctx.drawImage(img, zsx, zsy, zsw, zsh, cx, cy, cw, ch);
+}
+
+function makeCanvas(){
+  const c = document.createElement('canvas');
+  c.width = CANVAS_W; c.height = CANVAS_H;
+  return c;
+}
+
+let idleCanvas = null;
+function drawIdleFrame(){
+  monitor.querySelectorAll('.empty-state').forEach(e => e.remove());
+  if(photos.length === 0){
+    monitor.innerHTML = '<div class="empty-state">— Stage is empty —<br>add photos to see them here</div>' +
+      '<div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-bl"></div><div class="corner c-br"></div>';
+    return;
+  }
+  if(!idleCanvas){ idleCanvas = makeCanvas(); monitor.innerHTML=''; monitor.appendChild(idleCanvas);
+    monitor.insertAdjacentHTML('beforeend','<div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-bl"></div><div class="corner c-br"></div>'); }
+  const ctx = idleCanvas.getContext('2d');
+  ctx.fillStyle = '#000'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+  drawCover(ctx, photos[0].img, 0, 0, CANVAS_W, CANVAS_H, 0, resolveEffect(photos[0].effect, 0));
+}
+
+// ---- Playback / render engine ----
+function computeSegDuration(){ return parseFloat(durSlider.value)/10; }
+function computeTransDuration(){ return parseFloat(transSlider.value)/10; }
+
+function renderFrameAtTime(ctx, t){
+  const segDur = computeSegDuration();
+  const transDur = Math.min(computeTransDuration(), segDur*0.8);
+  let idx = Math.floor(t / segDur);
+  if(idx >= photos.length) idx = photos.length - 1;
+  const localT = t - idx*segDur;
+  const progress = Math.max(0, Math.min(1, localT/segDur));
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+
+  const eff = resolveEffect(photos[idx].effect, idx);
+  drawCover(ctx, photos[idx].img, 0, 0, CANVAS_W, CANVAS_H, progress, eff);
+
+  const hasNext = idx < photos.length - 1;
+  if(hasNext && localT > segDur - transDur){
+    const fadeProg = (localT - (segDur - transDur)) / transDur;
+    const nextEff = resolveEffect(photos[idx+1].effect, idx+1);
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, fadeProg));
+    drawCover(ctx, photos[idx+1].img, 0, 0, CANVAS_W, CANVAS_H, 0, nextEff);
+    ctx.restore();
+  }
+}
+
+function totalDuration(){ return photos.length * computeSegDuration(); }
+
+let previewRAF = null;
+previewBtn.addEventListener('click', () => {
+  if(previewRAF){ cancelAnimationFrame(previewRAF); previewRAF = null; previewBtn.textContent = 'Preview in browser'; return; }
+  const canvas = makeCanvas();
+  monitor.innerHTML = '';
+  monitor.appendChild(canvas);
+  monitor.insertAdjacentHTML('beforeend','<div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-bl"></div><div class="corner c-br"></div>');
+  const ctx = canvas.getContext('2d');
+  const start = performance.now();
+  const dur = totalDuration();
+  previewBtn.textContent = 'Stop preview';
+
+  let audioEl = null;
+  if(musicUrl){ audioEl = new Audio(musicUrl); audioEl.volume = volSlider.value/100; audioEl.play().catch(()=>{}); }
+
+  function loop(now){
+    const t = (now - start)/1000;
+    if(t >= dur){
+      renderFrameAtTime(ctx, dur - 0.001);
+      previewBtn.textContent = 'Preview in browser';
+      previewRAF = null;
+      if(audioEl) audioEl.pause();
+      return;
+    }
+    renderFrameAtTime(ctx, t);
+    previewRAF = requestAnimationFrame(loop);
+  }
+  previewRAF = requestAnimationFrame(loop);
+});
+
+// ---- Export to actual video file ----
+renderBtn.addEventListener('click', async () => {
+  renderBtn.disabled = true;
+  previewBtn.disabled = true;
+  downloadLink.classList.remove('show');
+  recDot.classList.add('on');
+  transportStatus.textContent = 'Rendering…';
+
+  const canvas = makeCanvas();
+  monitor.innerHTML = '';
+  monitor.appendChild(canvas);
+  monitor.insertAdjacentHTML('beforeend','<div class="corner c-tl"></div><div class="corner c-tr"></div><div class="corner c-bl"></div><div class="corner c-br"></div>');
+  const ctx = canvas.getContext('2d');
+
+  const dur = totalDuration();
+  const videoStream = canvas.captureStream(30);
+  let combinedStream = videoStream;
+  let audioCtx, audioEl, sourceNode, destNode;
+
+  if(musicUrl){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioEl = new Audio(musicUrl);
+    audioEl.crossOrigin = 'anonymous';
+    audioEl.loop = true;
+    sourceNode = audioCtx.createMediaElementSource(audioEl);
+    destNode = audioCtx.createMediaStreamDestination();
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = volSlider.value/100;
+    sourceNode.connect(gainNode);
+    gainNode.connect(destNode);
+    combinedStream = new MediaStream([...videoStream.getVideoTracks(), ...destNode.stream.getAudioTracks()]);
+  }
+
+  const mimeCandidates = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  const mime = mimeCandidates.find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
+  const recorder = new MediaRecorder(combinedStream, {mimeType: mime, videoBitsPerSecond: 5_000_000});
+  const chunks = [];
+  recorder.ondataavailable = e => { if(e.data.size) chunks.push(e.data); };
+
+  recorder.onstop = () => {
+    recDot.classList.remove('on');
+    const blob = new Blob(chunks, {type: mime});
+    const url = URL.createObjectURL(blob);
+    downloadLink.href = url;
+    downloadLink.download = 'listing-reel.webm';
+    downloadLink.classList.add('show');
+    transportStatus.textContent = 'Done — rendered ' + dur.toFixed(1) + 's reel.';
+    renderBtn.disabled = false;
+    previewBtn.disabled = false;
+    if(audioEl) audioEl.pause();
+    if(audioCtx) audioCtx.close();
+
+    const vid = document.createElement('video');
+    vid.src = url; vid.controls = true; vid.autoplay = false;
+    monitor.innerHTML = '';
+    monitor.appendChild(vid);
+
+    // Hand the finished reel up to the parent app (if embedded) so it can be
+    // saved to the shared team gallery. Works only when embedded via iframe
+    // on the same origin; standalone use just keeps the local download link.
+    if(window.parent && window.parent !== window){
+      const titleInput = window.prompt('Name this reel for the team gallery (optional):', 'Listing reel');
+      window.parent.postMessage({
+        type: 'reel-rendered',
+        blob,
+        duration: dur,
+        title: titleInput || 'Untitled listing reel'
+      }, window.location.origin);
+    }
+  };
+
+  recorder.start();
+  if(audioEl){ try{ await audioEl.play(); }catch(e){} }
+
+  const start = performance.now();
+  function loop(now){
+    const t = (now - start)/1000;
+    if(t >= dur){
+      renderFrameAtTime(ctx, dur - 0.001);
+      recorder.stop();
+      return;
+    }
+    renderFrameAtTime(ctx, t);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+});
+
+photoInput.addEventListener('change', updateButtons);
+durSlider.addEventListener('input', updateButtons);
+setInterval(updateButtons, 500);
+</script>
+</body>
+</html>
